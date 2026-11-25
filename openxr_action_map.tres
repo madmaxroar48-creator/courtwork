@@ -1,0 +1,99 @@
+[gd_resource type="OpenXRActionMap" load_steps=20 format=3]
+
+[sub_resource type="OpenXRAction" id="Action_grip_pose"]
+resource_name = "grip"
+localized_name = "Controller grip pose"
+action_type = 3
+toplevel_paths = PackedStringArray("/user/hand/left", "/user/hand/right")
+
+[sub_resource type="OpenXRAction" id="Action_grab"]
+resource_name = "grab"
+localized_name = "Grab basketball"
+action_type = 0
+toplevel_paths = PackedStringArray("/user/hand/right")
+
+[sub_resource type="OpenXRAction" id="Action_menu"]
+resource_name = "menu"
+localized_name = "Open trainer menu"
+action_type = 0
+toplevel_paths = PackedStringArray("/user/hand/right")
+
+[sub_resource type="OpenXRAction" id="Action_power_up"]
+resource_name = "power_up"
+localized_name = "Increase shot power"
+action_type = 0
+toplevel_paths = PackedStringArray("/user/hand/right")
+
+[sub_resource type="OpenXRAction" id="Action_assist"]
+resource_name = "assist"
+localized_name = "Toggle shot assist"
+action_type = 0
+toplevel_paths = PackedStringArray("/user/hand/left")
+
+[sub_resource type="OpenXRAction" id="Action_power_down"]
+resource_name = "power_down"
+localized_name = "Decrease shot power"
+action_type = 0
+toplevel_paths = PackedStringArray("/user/hand/left")
+
+[sub_resource type="OpenXRAction" id="Action_dribble"]
+resource_name = "dribble_assist"
+localized_name = "Toggle dribble assist"
+action_type = 0
+toplevel_paths = PackedStringArray("/user/hand/left")
+
+[sub_resource type="OpenXRAction" id="Action_reset"]
+resource_name = "reset_ball"
+localized_name = "Reset basketball"
+action_type = 0
+toplevel_paths = PackedStringArray("/user/hand/left")
+
+[sub_resource type="OpenXRIPBinding" id="Bind_grip_left"]
+action = SubResource("Action_grip_pose")
+binding_path = "/user/hand/left/input/grip/pose"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_grip_right"]
+action = SubResource("Action_grip_pose")
+binding_path = "/user/hand/right/input/grip/pose"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_grab"]
+action = SubResource("Action_grab")
+binding_path = "/user/hand/right/input/squeeze/click"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_menu"]
+action = SubResource("Action_menu")
+binding_path = "/user/hand/right/input/b/click"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_power_up"]
+action = SubResource("Action_power_up")
+binding_path = "/user/hand/right/input/a/click"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_assist"]
+action = SubResource("Action_assist")
+binding_path = "/user/hand/left/input/x/click"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_power_down"]
+action = SubResource("Action_power_down")
+binding_path = "/user/hand/left/input/y/click"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_dribble"]
+action = SubResource("Action_dribble")
+binding_path = "/user/hand/left/input/thumbstick/click"
+
+[sub_resource type="OpenXRIPBinding" id="Bind_reset"]
+action = SubResource("Action_reset")
+binding_path = "/user/hand/left/input/squeeze/click"
+
+[sub_resource type="OpenXRInteractionProfile" id="Touch_Controller_Profile"]
+interaction_profile_path = "/interaction_profiles/oculus/touch_controller"
+bindings = [SubResource("Bind_grip_left"), SubResource("Bind_grip_right"), SubResource("Bind_grab"), SubResource("Bind_menu"), SubResource("Bind_power_up"), SubResource("Bind_assist"), SubResource("Bind_power_down"), SubResource("Bind_dribble"), SubResource("Bind_reset")]
+
+[sub_resource type="OpenXRActionSet" id="Gameplay_Action_Set"]
+resource_name = "gameplay"
+localized_name = "Gameplay"
+priority = 0
+actions = [SubResource("Action_grip_pose"), SubResource("Action_grab"), SubResource("Action_menu"), SubResource("Action_power_up"), SubResource("Action_assist"), SubResource("Action_power_down"), SubResource("Action_dribble"), SubResource("Action_reset")]
+
+[resource]
+action_sets = [SubResource("Gameplay_Action_Set")]
+interaction_profiles = [SubResource("Touch_Controller_Profile")]
