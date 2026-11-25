@@ -1,1 +1,118 @@
+name: Build Courtwork Street VR for Quest 2
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '**'
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-openxr:
+    name: Export Quest 2 Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        shell: bash
+        run: |
+          set -euo pipefail
+          yes | sdkmanager --licenses >/dev/null
+          sdkmanager \
+            'platform-tools' \
+            'build-tools;35.0.1' \
+            'platforms;android-35' \
+            'cmdline-tools;latest' \
+            'ndk;28.1.13356709' \
+            'cmake;3.10.2.4988404'
+
+      - name: Download Godot 4.7.2 and Android export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          RELEASE='https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable'
+          mkdir -p "$RUNNER_TEMP/godot" "$RUNNER_TEMP/templates" \
+            "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          curl -fL --retry 3 "$RELEASE/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o "$RUNNER_TEMP/godot-editor.zip"
+          curl -fL --retry 3 "$RELEASE/Godot_v4.7.2-stable_export_templates.tpz" \
+            -o "$RUNNER_TEMP/godot-templates.tpz"
+          unzip -q "$RUNNER_TEMP/godot-editor.zip" -d "$RUNNER_TEMP/godot"
+          unzip -q "$RUNNER_TEMP/godot-templates.tpz" -d "$RUNNER_TEMP/templates"
+          cp -a "$RUNNER_TEMP/templates/templates/." \
+            "$HOME/.local/share/godot/export_templates/4.7.2.stable/"
+          GODOT_BIN="$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
+          chmod +x "$GODOT_BIN"
+          echo "GODOT_BIN=$GODOT_BIN" >> "$GITHUB_ENV"
+          "$GODOT_BIN" --version
+
+      - name: Configure Android paths and debug signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          keytool -genkeypair -v \
+            -keystore "$RUNNER_TEMP/courtwork-debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -dname 'CN=Android Debug,O=Android,C=US'
+          mkdir -p "$HOME/.config/godot"
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/debug_keystore = "$RUNNER_TEMP/courtwork-debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+
+      - name: Import Godot project
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f project.godot
+          test -f export_presets.cfg
+          "$GODOT_BIN" --headless --editor --path "$GITHUB_WORKSPACE" --import --quit
+
+      - name: Export Android OpenXR APK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          "$GODOT_BIN" --headless --path "$GITHUB_WORKSPACE" \
+            --export-debug 'Android' \
+            "$GITHUB_WORKSPACE/build/CourtworkStreetVR-Quest2.apk"
+          test -s build/CourtworkStreetVR-Quest2.apk
+          file build/CourtworkStreetVR-Quest2.apk
+          ls -lh build/CourtworkStreetVR-Quest2.apk
+
+      - name: Upload downloadable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CourtworkStreetVR-Quest2-APK
+          path: build/CourtworkStreetVR-Quest2.apk
+          if-no-files-found: error
+          retention-days: 30
+
 
